@@ -43,11 +43,18 @@ public class Bootstrap {
         }
 
         for (ElementGroup extractedGroup : extractedGroups) {
-            System.out.println(extractedGroup.getType());
+            System.out.println(extractedGroup.getType().getTitle());
             for (Element element : extractedGroup.getElements()) {
-                System.out.println(element.getFile().getName());
+                var file = element.getFile();
+                if (file.isDirectory()) {
+                    System.out.print("📁");
+                } else {
+                    System.out.print("🗒");
+                }
+                System.out.print(" ");
+                System.out.println(file.getName());
             }
-            System.out.println("------------------------------------------------------------------------------------");
+            System.out.println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
         }
 
     }

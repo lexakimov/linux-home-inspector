@@ -1,10 +1,14 @@
 package com.github.lexakimov.home_inspector.element.group_extractors;
 
+import com.github.lexakimov.home_inspector.comparators.IsDirectoryFileComparator;
+import com.github.lexakimov.home_inspector.comparators.IsHiddenFileComparator;
+import com.github.lexakimov.home_inspector.comparators.NameFileComparator;
 import com.github.lexakimov.home_inspector.element.Element;
 import com.github.lexakimov.home_inspector.element.ElementGroup;
 import com.github.lexakimov.home_inspector.element.ElementGroupType;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -36,8 +40,16 @@ public abstract class ElementGroupExtractor {
         }
 
         if (!groupElements.isEmpty()) {
+            groupElements.sort(elementsSortStrategy());
             resultList.add(group);
         }
+    }
+
+    Comparator<Element> elementsSortStrategy() {
+        return (o1, o2) -> new IsDirectoryFileComparator()
+            .thenComparing(new IsHiddenFileComparator())
+            .thenComparing(new NameFileComparator())
+            .compare(o1.getFile(), o2.getFile());
     }
 
     protected abstract boolean precondition(File file);
