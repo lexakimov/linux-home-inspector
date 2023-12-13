@@ -6,7 +6,7 @@ import java.io.File;
 public class LocalElementGroupExtractor extends ElementGroupExtractor {
 
     public LocalElementGroupExtractor() {
-        super(ElementGroupType.XDG_DIRS);
+        super(ElementGroupType.LOCAL);
     }
 
     @Override
