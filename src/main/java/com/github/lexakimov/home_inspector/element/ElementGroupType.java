@@ -6,15 +6,22 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public enum ElementGroupType {
-    CACHE("Кэш приложений"),
-    CONFIGS("Конфигурации приложений"),
-    JAVA("Java"),
-    KUBERNETES("Kubernetes"),
-    LOCAL("Local"),
-    XDG_DIRS("Папки user dirs"),
+    CONFIGS("Конфигурации приложений", null),
+    CACHE("Кэш приложений", null),
+    LOCAL("Данные приложений", null),
+    XDG_DIRS(
+        "Папки user dirs",
+        """
+            Директории пользователя, определенные ~/.config/user-dirs.dirs
+            https://wiki.archlinux.org/title/XDG_user_directories_(Русский)"""
+    ),
 
-    OTHER("Остальные"),
-    UNKNOWN("Неизвестно");
+    JAVA("Java", null),
+    KUBERNETES("Kubernetes", null),
+
+    OTHER("Остальные", null),
+    UNKNOWN("Неизвестно", null);
 
     private final String title;
+    private final String description;
 }
