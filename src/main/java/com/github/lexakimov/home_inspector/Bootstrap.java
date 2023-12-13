@@ -1,5 +1,8 @@
 package com.github.lexakimov.home_inspector;
 
+import static com.github.lexakimov.home_inspector.util.FileUtil.listFilesOfDirectory;
+import static com.github.lexakimov.home_inspector.util.FileUtil.userHome;
+
 import com.github.lexakimov.home_inspector.element.Element;
 import com.github.lexakimov.home_inspector.element.ElementGroup;
 import com.github.lexakimov.home_inspector.element.group_extractors.CacheElementGroupExtractor;
@@ -10,22 +13,15 @@ import com.github.lexakimov.home_inspector.element.group_extractors.KubernetesEl
 import com.github.lexakimov.home_inspector.element.group_extractors.LocalElementGroupExtractor;
 import com.github.lexakimov.home_inspector.element.group_extractors.UnknownElementGroupExtractor;
 import com.github.lexakimov.home_inspector.element.group_extractors.XdgDirsElementGroupExtractor;
-import java.io.File;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.Objects;
+import java.util.Comparator;
+import java.util.List;
 
 public class Bootstrap {
 
     public static void main(String[] args) {
-        var homeDirectoryPath = System.getProperty("user.home");
-        var homeDirectoryFile = new File(homeDirectoryPath);
-        var listFiles = homeDirectoryFile.listFiles();
-        Objects.requireNonNull(listFiles);
-
-        var files = new LinkedList<File>();
-        Collections.addAll(files, listFiles);
+        var homeDirectory = userHome();
+        var homeDirectoryFiles = listFilesOfDirectory(homeDirectory);
 
         var extractors = new ArrayList<ElementGroupExtractor>();
         extractors.add(new CacheElementGroupExtractor());
@@ -39,25 +35,102 @@ public class Bootstrap {
         var extractedGroups = new ArrayList<ElementGroup>();
 
         for (ElementGroupExtractor extractor : extractors) {
-            extractor.tryExtractElementsToGroup(files, extractedGroups);
+            extractor.tryExtractElementsToGroup(homeDirectoryFiles, extractedGroups);
         }
 
+        extractedGroups.sort(Comparator.comparing(ElementGroup::getType));
+
+        printSeparatorLine();
+        println("Домашняя директория: " + homeDirectory);
+        printSeparatorLine();
         for (ElementGroup extractedGroup : extractedGroups) {
-            System.out.println(extractedGroup.getType().getTitle());
-            for (Element element : extractedGroup.getElements()) {
-                var file = element.getFile();
-                if (file.isDirectory()) {
-                    System.out.print("📁");
-                } else {
-                    System.out.print("🗒");
-                }
-                System.out.print(" ");
-                System.out.println(file.getName());
+            var groupType = extractedGroup.getType();
+            println(groupType.getTitle());
+            var description = groupType.getDescription();
+            if (description != null) {
+                println(description);
             }
-            System.out.println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+            println();
+            printElements(extractedGroup.getElements(), 0);
+            println();
+            printSeparatorLine();
         }
 
     }
 
+    private static void printElements(List<Element> elements, int indentLevel) {
+        for (int i = 0; i < elements.size(); i++) {
+            Element element = elements.get(i);
+            var file = element.getFile();
 
+            if (indentLevel > 0) {
+                println("│");
+                if (i + 1 < elements.size()) {
+                    print("├");
+                } else {
+                    print("└");
+                }
+                for (int j = 0; j < indentLevel; j++) {
+                    print("──");
+                }
+                print(" ");
+            }
+
+            if (file.isDirectory()) {
+                print("📁");
+            } else {
+                print("🗒");
+            }
+            print(" ");
+            print(file.getName());
+            var elementDescription = element.getDescription();
+            if (elementDescription != null) {
+                if (indentLevel == 0) {
+                    print(" - ");
+                    print(elementDescription);
+                } else {
+                    println();
+                    elementDescription = elementDescription.indent(2 * indentLevel);
+                    var integer = Integer.valueOf(i);
+                    var descriptionStreamIterator = elementDescription.lines().iterator();
+                    while (descriptionStreamIterator.hasNext()) {
+                        var string = descriptionStreamIterator.next();
+                        if (integer + 1 < elements.size()) {
+                            print("│");
+                        }
+                        for (int j = 0; j < indentLevel; j++) {
+                            print("  ");
+                        }
+                        if (descriptionStreamIterator.hasNext()) {
+                            println(string);
+                        } else {
+                            print(string);
+                        }
+                    }
+                }
+            }
+            println();
+            var childElements = element.getChildElements();
+            if (!childElements.isEmpty()) {
+                printElements(childElements, indentLevel + 1);
+            }
+        }
+    }
+
+    private static void printSeparatorLine() {
+        println(
+            "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+    }
+
+    private static void println() {
+        System.out.println();
+    }
+
+    private static void println(String string) {
+        System.out.println(string);
+    }
+
+    private static void print(String string) {
+        System.out.print(string);
+    }
 }
